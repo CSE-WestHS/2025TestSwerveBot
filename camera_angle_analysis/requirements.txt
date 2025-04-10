@@ -1,2 +1,0 @@
-matplotlib==3.10.0
-robotpy-wpimath==2025.2.1
