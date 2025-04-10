@@ -1,3 +1,16 @@
+// Copyright 2021-2025 FRC 6328
+// http://github.com/Mechanical-Advantage
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// version 3 as published by the Free Software Foundation or
+// available in the root directory of this project.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+
 package frc.robot.commands;
 
 import edu.wpi.first.math.MathUtil;
@@ -80,13 +93,12 @@ public class DriveCommands {
           boolean isFlipped =
               DriverStation.getAlliance().isPresent()
                   && DriverStation.getAlliance().get() == Alliance.Red;
-          speeds =
+          drive.runVelocity(
               ChassisSpeeds.fromFieldRelativeSpeeds(
                   speeds,
                   isFlipped
                       ? drive.getRotation().plus(new Rotation2d(Math.PI))
-                      : drive.getRotation());
-          drive.runVelocity(speeds);
+                      : drive.getRotation()));
         },
         drive);
   }
@@ -132,13 +144,12 @@ public class DriveCommands {
               boolean isFlipped =
                   DriverStation.getAlliance().isPresent()
                       && DriverStation.getAlliance().get() == Alliance.Red;
-              speeds =
+              drive.runVelocity(
                   ChassisSpeeds.fromFieldRelativeSpeeds(
                       speeds,
                       isFlipped
                           ? drive.getRotation().plus(new Rotation2d(Math.PI))
-                          : drive.getRotation());
-              drive.runVelocity(speeds);
+                          : drive.getRotation()));
             },
             drive)
 
@@ -278,8 +289,6 @@ public class DriveCommands {
                               + " inches");
                     })));
   }
-
-  // public static Command azimuthTuning()
 
   private static class WheelRadiusCharacterizationState {
     double[] positions = new double[4];

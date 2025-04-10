@@ -1,3 +1,16 @@
+// Copyright 2021-2025 FRC 6328
+// http://github.com/Mechanical-Advantage
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// version 3 as published by the Free Software Foundation or
+// available in the root directory of this project.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+
 package frc.robot;
 
 import edu.wpi.first.wpilibj.Threads;
@@ -9,6 +22,7 @@ import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
+import org.littletonrobotics.urcl.URCL;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -61,6 +75,9 @@ public class Robot extends LoggedRobot {
         break;
     }
 
+    // Initialize URCL
+    Logger.registerURCL(URCL.startExternal());
+
     // Start AdvantageKit logger
     Logger.start();
 
@@ -72,8 +89,9 @@ public class Robot extends LoggedRobot {
   /** This function is called periodically during all modes. */
   @Override
   public void robotPeriodic() {
-    // Switch thread to high priority to improve loop timing
-    Threads.setCurrentThreadPriority(true, 99);
+    // Optionally switch the thread to high priority to improve loop
+    // timing (see the template project documentation for details)
+    // Threads.setCurrentThreadPriority(true, 99);
 
     // Runs the Scheduler. This is responsible for polling buttons, adding
     // newly-scheduled commands, running already-scheduled commands, removing
@@ -82,8 +100,8 @@ public class Robot extends LoggedRobot {
     // the Command-based framework to work.
     CommandScheduler.getInstance().run();
 
-    // Return to normal thread priority
-    Threads.setCurrentThreadPriority(false, 10);
+    // Return to non-RT thread priority (do not modify the first argument)
+    // Threads.setCurrentThreadPriority(false, 10);
   }
 
   /** This function is called once when the robot is disabled. */
@@ -103,7 +121,6 @@ public class Robot extends LoggedRobot {
     if (autonomousCommand != null) {
       autonomousCommand.schedule();
     }
-    // robotContainer.resetSimulationField();
   }
 
   /** This function is called periodically during autonomous. */

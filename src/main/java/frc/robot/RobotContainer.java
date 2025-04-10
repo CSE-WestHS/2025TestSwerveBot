@@ -1,9 +1,21 @@
+// Copyright 2021-2025 FRC 6328
+// http://github.com/Mechanical-Advantage
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// version 3 as published by the Free Software Foundation or
+// available in the root directory of this project.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+
 package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -12,23 +24,11 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.drive.Module;
-import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorConstants;
-import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorIOReplay;
-import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorIOSim;
-import frc.robot.subsystems.drive.azimuth_motor.AzimuthMotorIOTalonFX;
-import frc.robot.subsystems.drive.drive_motor.DriveMotorConstants;
-import frc.robot.subsystems.drive.drive_motor.DriveMotorIOReplay;
-import frc.robot.subsystems.drive.drive_motor.DriveMotorIOSim;
-import frc.robot.subsystems.drive.drive_motor.DriveMotorIOTalonFX;
-import frc.robot.subsystems.drive.gyro.GyroIO;
-import frc.robot.subsystems.drive.gyro.GyroIOPigeon2;
-import frc.robot.subsystems.drive.odometry_threads.PhoenixOdometryThread;
-import frc.robot.subsystems.vision.Vision;
-import frc.robot.subsystems.vision.VisionConstants;
-import frc.robot.subsystems.vision.VisionIO;
-import frc.robot.subsystems.vision.VisionIOPhotonVision;
-import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
+import frc.robot.subsystems.drive.GyroIO;
+import frc.robot.subsystems.drive.GyroIOPigeon2;
+import frc.robot.subsystems.drive.ModuleIO;
+import frc.robot.subsystems.drive.ModuleIOSim;
+import frc.robot.subsystems.drive.ModuleIOSpark;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -41,11 +41,8 @@ public class RobotContainer {
   // Subsystems
   private final Drive drive;
 
-  @SuppressWarnings("unused")
-  private final Vision vision;
-
   // Controller
-  private final CommandXboxController driverController = new CommandXboxController(0);
+  private final CommandXboxController controller = new CommandXboxController(0);
 
   // Dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
@@ -55,81 +52,24 @@ public class RobotContainer {
     switch (Constants.currentMode) {
       case REAL:
         // Real robot, instantiate hardware IO implementations
-
-        // If using REV hardware, set up the Spark Odometry Thread, if using CTRE hardware, set up
-        // the Phoenix Odometry Thread, if using a combination of the two, set up both
         drive =
             new Drive(
-                new GyroIOPigeon2(0, "Drive"),
-                new Module(
-                    new DriveMotorIOTalonFX(
-                        "FrontLeftDrive", DriveMotorConstants.FRONT_LEFT_CONFIG),
-                    DriveMotorConstants.FRONT_LEFT_GAINS,
-                    new AzimuthMotorIOTalonFX(
-                        "FrontLeftAz", AzimuthMotorConstants.FRONT_LEFT_CONFIG),
-                    AzimuthMotorConstants.FRONT_LEFT_GAINS),
-                new Module(
-                    new DriveMotorIOTalonFX(
-                        "FrontRightDrive", DriveMotorConstants.FRONT_RIGHT_CONFIG),
-                    DriveMotorConstants.FRONT_RIGHT_GAINS,
-                    new AzimuthMotorIOTalonFX(
-                        "FrontRightAz", AzimuthMotorConstants.FRONT_RIGHT_CONFIG),
-                    AzimuthMotorConstants.FRONT_RIGHT_GAINS),
-                new Module(
-                    new DriveMotorIOTalonFX("BackLeftDrive", DriveMotorConstants.BACK_LEFT_CONFIG),
-                    DriveMotorConstants.BACK_LEFT_GAINS,
-                    new AzimuthMotorIOTalonFX("BackLeftAz", AzimuthMotorConstants.BACK_LEFT_CONFIG),
-                    AzimuthMotorConstants.BACK_LEFT_GAINS),
-                new Module(
-                    new DriveMotorIOTalonFX(
-                        "BackRightDrive", DriveMotorConstants.BACK_RIGHT_CONFIG),
-                    DriveMotorConstants.BACK_RIGHT_GAINS,
-                    new AzimuthMotorIOTalonFX(
-                        "BackRightAz", AzimuthMotorConstants.BACK_RIGHT_CONFIG),
-                    AzimuthMotorConstants.BACK_RIGHT_GAINS),
-                PhoenixOdometryThread.getInstance(),
-                null);
-        vision =
-            new Vision(
-                drive::addVisionMeasurement,
-                new VisionIOPhotonVision(
-                    VisionConstants.camera0Name, VisionConstants.robotToCamera0));
+                new GyroIOPigeon2(),
+                new ModuleIOSpark(0),
+                new ModuleIOSpark(1),
+                new ModuleIOSpark(2),
+                new ModuleIOSpark(3));
         break;
 
       case SIM:
+        // Sim robot, instantiate physics sim IO implementations
         drive =
             new Drive(
                 new GyroIO() {},
-                new Module(
-                    new DriveMotorIOSim("FrontLeftDrive", DriveMotorConstants.FRONT_LEFT_CONFIG),
-                    DriveMotorConstants.FRONT_LEFT_GAINS,
-                    new AzimuthMotorIOSim("FrontLeftAz", AzimuthMotorConstants.FRONT_LEFT_CONFIG),
-                    AzimuthMotorConstants.FRONT_LEFT_GAINS),
-                new Module(
-                    new DriveMotorIOSim("FrontRightDrive", DriveMotorConstants.FRONT_RIGHT_CONFIG),
-                    DriveMotorConstants.FRONT_RIGHT_GAINS,
-                    new AzimuthMotorIOSim("FrontRightAz", AzimuthMotorConstants.FRONT_RIGHT_CONFIG),
-                    AzimuthMotorConstants.FRONT_RIGHT_GAINS),
-                new Module(
-                    new DriveMotorIOSim("BackLeftDrive", DriveMotorConstants.BACK_LEFT_CONFIG),
-                    DriveMotorConstants.BACK_LEFT_GAINS,
-                    new AzimuthMotorIOSim("BackLeftAz", AzimuthMotorConstants.BACK_LEFT_CONFIG),
-                    AzimuthMotorConstants.BACK_LEFT_GAINS),
-                new Module(
-                    new DriveMotorIOSim("BackRightDrive", DriveMotorConstants.BACK_RIGHT_CONFIG),
-                    DriveMotorConstants.BACK_RIGHT_GAINS,
-                    new AzimuthMotorIOSim("BackRightAz", AzimuthMotorConstants.BACK_RIGHT_CONFIG),
-                    AzimuthMotorConstants.BACK_RIGHT_GAINS),
-                null,
-                null);
-
-        vision =
-            new Vision(
-                drive::addVisionMeasurement,
-                new VisionIOPhotonVisionSim(
-                    VisionConstants.camera0Name, VisionConstants.robotToCamera0, drive::getPose),
-                new VisionIOPhotonVisionSim(
-                    VisionConstants.camera1Name, VisionConstants.robotToCamera1, drive::getPose));
+                new ModuleIOSim(),
+                new ModuleIOSim(),
+                new ModuleIOSim(),
+                new ModuleIOSim());
         break;
 
       default:
@@ -137,29 +77,10 @@ public class RobotContainer {
         drive =
             new Drive(
                 new GyroIO() {},
-                new Module(
-                    new DriveMotorIOReplay("FrontLeftDrive"),
-                    DriveMotorConstants.FRONT_LEFT_GAINS,
-                    new AzimuthMotorIOReplay("FrontLeftAz"),
-                    AzimuthMotorConstants.FRONT_LEFT_GAINS),
-                new Module(
-                    new DriveMotorIOReplay("FrontRightDrive"),
-                    DriveMotorConstants.FRONT_RIGHT_GAINS,
-                    new AzimuthMotorIOReplay("FrontRightAz"),
-                    AzimuthMotorConstants.FRONT_RIGHT_GAINS),
-                new Module(
-                    new DriveMotorIOReplay("BackLeftDrive"),
-                    DriveMotorConstants.BACK_LEFT_GAINS,
-                    new AzimuthMotorIOReplay("BackLeftAz"),
-                    AzimuthMotorConstants.BACK_LEFT_GAINS),
-                new Module(
-                    new DriveMotorIOReplay("BackRightDrive"),
-                    DriveMotorConstants.BACK_RIGHT_GAINS,
-                    new AzimuthMotorIOReplay("BackRightAz"),
-                    AzimuthMotorConstants.BACK_RIGHT_GAINS),
-                null,
-                null);
-        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
+                new ModuleIO() {},
+                new ModuleIO() {},
+                new ModuleIO() {},
+                new ModuleIO() {});
         break;
     }
 
@@ -197,37 +118,33 @@ public class RobotContainer {
     drive.setDefaultCommand(
         DriveCommands.joystickDrive(
             drive,
-            () -> -driverController.getLeftY(),
-            () -> -driverController.getLeftX(),
-            () -> -driverController.getRightX()));
+            () -> -controller.getLeftY(),
+            () -> -controller.getLeftX(),
+            () -> -controller.getRightX()));
 
     // Lock to 0° when A button is held
-    driverController
+    controller
         .a()
         .whileTrue(
             DriveCommands.joystickDriveAtAngle(
                 drive,
-                () -> -driverController.getLeftY(),
-                () -> -driverController.getLeftX(),
+                () -> -controller.getLeftY(),
+                () -> -controller.getLeftX(),
                 () -> new Rotation2d()));
 
     // Switch to X pattern when X button is pressed
-    driverController.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
-
-    // // Reset gyro / odometry
-    final Runnable resetGyro =
-        () ->
-            drive.setPose(
-                new Pose2d(
-                    drive.getPose().getTranslation(),
-                    DriverStation.getAlliance().isPresent()
-                        ? (DriverStation.getAlliance().get() == DriverStation.Alliance.Red
-                            ? new Rotation2d(Math.PI)
-                            : new Rotation2d())
-                        : new Rotation2d())); // zero gyro
+    controller.x().onTrue(Commands.runOnce(drive::stopWithX, drive));
 
     // Reset gyro to 0° when B button is pressed
-    driverController.b().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
+    controller
+        .b()
+        .onTrue(
+            Commands.runOnce(
+                    () ->
+                        drive.setPose(
+                            new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
+                    drive)
+                .ignoringDisable(true));
   }
 
   /**
