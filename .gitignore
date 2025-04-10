@@ -184,7 +184,11 @@ ctre_sim/
 compile_commands.json
 
 # Version file
-src/main/java/frc/robot/BuildConstants.java
+src/main/java/org/littletonrobotics/frc2025/BuildConstants.java
 
-/repos/releases/com/pathplanner/lib/PathplannerLib-cpp
-!/repos/releases/com/pathplanner/lib/PathplannerLib-java/**/*.jar
+# Generated paths
+src/main/deploy/trajectories/*.pathblob
+
+# Python files
+venv
+__pycache__
