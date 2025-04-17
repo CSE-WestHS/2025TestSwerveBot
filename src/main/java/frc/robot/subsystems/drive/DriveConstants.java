@@ -48,7 +48,6 @@ public class DriveConstants {
       new Rotation2d(Rotations.of(0.350830).in(Radians));
 
   // Device CAN IDs
-  public static final int pigeonCanId = 45;
 
   public static final int frontLeftDriveCanId = 3;
   public static final int backLeftDriveCanId = 12;

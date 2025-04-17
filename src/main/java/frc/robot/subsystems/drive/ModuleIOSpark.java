@@ -18,7 +18,6 @@ import static frc.robot.util.SparkUtil.*;
 
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.ClosedLoopSlot;
-import com.revrobotics.spark.SparkBase;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
@@ -43,8 +42,8 @@ public class ModuleIOSpark implements ModuleIO {
   private final Rotation2d zeroRotation;
 
   // Hardware objects
-  private final SparkBase driveSpark;
-  private final SparkBase turnSpark;
+  private final SparkMax driveSpark;
+  private final SparkMax turnSpark;
   private final RelativeEncoder driveEncoder;
   private final RelativeEncoder turnEncoder;
   // private final CANcoder cancoder;
@@ -80,6 +79,7 @@ public class ModuleIOSpark implements ModuleIO {
               default -> 0;
             },
             MotorType.kBrushless);
+    System.out.println("Set drive canids");
     turnSpark =
         new SparkMax(
             switch (module) {
@@ -90,6 +90,8 @@ public class ModuleIOSpark implements ModuleIO {
               default -> 0;
             },
             MotorType.kBrushless);
+    System.out.println("Set turn canids");
+
     // cancoder =
     //     new CANcoder(
     //         switch (module) {
@@ -103,6 +105,7 @@ public class ModuleIOSpark implements ModuleIO {
     turnEncoder = turnSpark.getEncoder();
     driveController = driveSpark.getClosedLoopController();
     turnController = turnSpark.getClosedLoopController();
+    System.out.println("Set endoders");
     // Configure drive motor
     var driveConfig = new SparkMaxConfig();
     driveConfig
@@ -137,7 +140,7 @@ public class ModuleIOSpark implements ModuleIO {
             driveSpark.configure(
                 driveConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
     tryUntilOk(driveSpark, 5, () -> driveEncoder.setPosition(0.0));
-
+    System.out.println("Drive config finished");
     // Configure turn motor
     var turnConfig = new SparkMaxConfig();
     turnConfig
@@ -168,10 +171,12 @@ public class ModuleIOSpark implements ModuleIO {
         .outputCurrentPeriodMs(20);
     tryUntilOk(
         turnSpark,
-        50,
+        5,
         () ->
             turnSpark.configure(
                 turnConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
+     System.out.println("turn config finished");
+
     // CANcoderConfiguration cancoderConfig = new CANcoderConfiguration().withMagnetSensor(new
     // MagnetSensorConfigs().withSensorDirection(SensorDirectionValue.CounterClockwise_Positive));
     // cancoderConfig.MagnetSensor.withMagnetOffset(switch (module) );
