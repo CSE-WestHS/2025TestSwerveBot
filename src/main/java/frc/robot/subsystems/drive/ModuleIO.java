@@ -1,16 +1,3 @@
-// Copyright 2021-2025 FRC 6328
-// http://github.com/Mechanical-Advantage
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// version 3 as published by the Free Software Foundation or
-// available in the root directory of this project.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-
 package frc.robot.subsystems.drive;
 
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -26,6 +13,8 @@ public interface ModuleIO {
     public double driveCurrentAmps = 0.0;
 
     public boolean turnConnected = false;
+    public boolean turnEncoderConnected = false;
+    public Rotation2d turnAbsolutePosition = new Rotation2d();
     public Rotation2d turnPosition = new Rotation2d();
     public double turnVelocityRadPerSec = 0.0;
     public double turnAppliedVolts = 0.0;
@@ -50,4 +39,12 @@ public interface ModuleIO {
 
   /** Run the turn motor to the specified rotation. */
   public default void setTurnPosition(Rotation2d rotation) {}
+
+  public default ModuleGains getGains() {
+    return new ModuleGains(0, 0, 0, 0, 0, 0);
+  }
+
+  public default void setGains(ModuleGains gains) {}
+
+  public record ModuleGains(double kP, double kI, double kD, double kS, double kV, double kA) {}
 }

@@ -1,25 +1,13 @@
-// Copyright 2021-2025 FRC 6328
-// http://github.com/Mechanical-Advantage
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// version 3 as published by the Free Software Foundation or
-// available in the root directory of this project.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-
 package frc.robot.subsystems.drive;
-
-import static frc.robot.subsystems.drive.DriveConstants.*;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
+import frc.robot.subsystems.drive.ModuleIO.ModuleGains;
+import frc.robot.util.LoggedTunableNumber;
 import org.littletonrobotics.junction.Logger;
 
 public class Module {
@@ -29,18 +17,43 @@ public class Module {
 
   private final Alert driveDisconnectedAlert;
   private final Alert turnDisconnectedAlert;
+  private final Alert turnEncoderDisconnectedAlert;
   private SwerveModulePosition[] odometryPositions = new SwerveModulePosition[] {};
+
+  private final LoggedTunableNumber kP;
+  private final LoggedTunableNumber kI;
+  private final LoggedTunableNumber kD;
+  private final LoggedTunableNumber kS;
+  private final LoggedTunableNumber kV;
+  private final LoggedTunableNumber kA;
 
   public Module(ModuleIO io, int index) {
     this.io = io;
     this.index = index;
     driveDisconnectedAlert =
         new Alert(
+            "Drive",
             "Disconnected drive motor on module " + Integer.toString(index) + ".",
             AlertType.kError);
     turnDisconnectedAlert =
         new Alert(
-            "Disconnected turn motor on module " + Integer.toString(index) + ".", AlertType.kError);
+            "Drive",
+            "Disconnected turn motor on module " + Integer.toString(index) + ".",
+            AlertType.kError);
+    turnEncoderDisconnectedAlert =
+        new Alert(
+            "Drive",
+            "Disconnected turn encoder on module " + Integer.toString(index) + ".",
+            AlertType.kError);
+
+    ModuleGains gains = io.getGains();
+
+    kP = new LoggedTunableNumber("Drive/" + index + "/Gains/kP", gains.kP());
+    kI = new LoggedTunableNumber("Drive/" + index + "/Gains/kI", gains.kI());
+    kD = new LoggedTunableNumber("Drive/" + index + "/Gains/kD", gains.kD());
+    kS = new LoggedTunableNumber("Drive/" + index + "/Gains/kS", gains.kS());
+    kV = new LoggedTunableNumber("Drive/" + index + "/Gains/kV", gains.kV());
+    kA = new LoggedTunableNumber("Drive/" + index + "/Gains/kA", gains.kA());
   }
 
   public void periodic() {
@@ -51,7 +64,8 @@ public class Module {
     int sampleCount = inputs.odometryTimestamps.length; // All signals are sampled together
     odometryPositions = new SwerveModulePosition[sampleCount];
     for (int i = 0; i < sampleCount; i++) {
-      double positionMeters = inputs.odometryDrivePositionsRad[i] * wheelRadiusMeters;
+      double positionMeters =
+          inputs.odometryDrivePositionsRad[i] * DriveConstants.driveWheelRadiusMeters;
       Rotation2d angle = inputs.odometryTurnPositions[i];
       odometryPositions[i] = new SwerveModulePosition(positionMeters, angle);
     }
@@ -59,6 +73,20 @@ public class Module {
     // Update alerts
     driveDisconnectedAlert.set(!inputs.driveConnected);
     turnDisconnectedAlert.set(!inputs.turnConnected);
+    turnEncoderDisconnectedAlert.set(!inputs.turnEncoderConnected);
+
+    LoggedTunableNumber.ifChanged(
+        hashCode(),
+        (values) -> {
+          io.setGains(
+              new ModuleGains(values[0], values[1], values[2], values[3], values[4], values[5]));
+        },
+        kP,
+        kI,
+        kD,
+        kS,
+        kV,
+        kA);
   }
 
   /** Runs the module with the specified setpoint state. Mutates the state to optimize it. */
@@ -68,7 +96,7 @@ public class Module {
     state.cosineScale(inputs.turnPosition);
 
     // Apply setpoints
-    io.setDriveVelocity(state.speedMetersPerSecond / wheelRadiusMeters);
+    io.setDriveVelocity(state.speedMetersPerSecond / DriveConstants.driveWheelRadiusMeters);
     io.setTurnPosition(state.angle);
   }
 
@@ -91,12 +119,12 @@ public class Module {
 
   /** Returns the current drive position of the module in meters. */
   public double getPositionMeters() {
-    return inputs.drivePositionRad * wheelRadiusMeters;
+    return inputs.drivePositionRad * DriveConstants.driveWheelRadiusMeters;
   }
 
   /** Returns the current drive velocity of the module in meters per second. */
   public double getVelocityMetersPerSec() {
-    return inputs.driveVelocityRadPerSec * wheelRadiusMeters;
+    return inputs.driveVelocityRadPerSec * DriveConstants.driveWheelRadiusMeters;
   }
 
   /** Returns the module position (turn angle and drive position). */
@@ -124,8 +152,8 @@ public class Module {
     return inputs.drivePositionRad;
   }
 
-  /** Returns the module velocity in rad/sec. */
+  /** Returns the module velocity in rotations/sec (Phoenix native units). */
   public double getFFCharacterizationVelocity() {
-    return inputs.driveVelocityRadPerSec;
+    return Units.radiansToRotations(inputs.driveVelocityRadPerSec);
   }
 }
