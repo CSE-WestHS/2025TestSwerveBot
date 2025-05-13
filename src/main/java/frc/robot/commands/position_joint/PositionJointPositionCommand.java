@@ -21,6 +21,6 @@ public class PositionJointPositionCommand extends Command {
 
   @Override
   public boolean isFinished() {
-    return positionJoint.isFInished();
+    return true;
   }
 }

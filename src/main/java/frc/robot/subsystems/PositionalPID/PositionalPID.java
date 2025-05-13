@@ -1,7 +1,5 @@
 package frc.robot.subsystems.PositionalPID;
 
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.PositionalPID.PositionalPIDConstants.PositionalPIDGains;
 import frc.robot.util.LoggedTunableNumber;
@@ -19,10 +17,6 @@ public class PositionalPID extends SubsystemBase {
   private final LoggedTunableNumber kS;
   private final LoggedTunableNumber kV;
   private final LoggedTunableNumber kA;
-  private TrapezoidProfile.Constraints constraints;
-  private TrapezoidProfile profile;
-  private TrapezoidProfile.State setpoint = new TrapezoidProfile.State();
-  private TrapezoidProfile.State goal = new TrapezoidProfile.State();
 
   public PositionalPID(PositionalPIDIO io, PositionalPIDGains gains) {
     positionalpid = io;
@@ -35,11 +29,6 @@ public class PositionalPID extends SubsystemBase {
     kS = new LoggedTunableNumber(name + "/Gains/kS", gains.kS());
     kV = new LoggedTunableNumber(name + "/Gains/kV", gains.kV());
     kA = new LoggedTunableNumber(name + "/Gains/kA", gains.kA());
-
-    constraints = new TrapezoidProfile.Constraints(1, 1);
-    profile = new TrapezoidProfile(constraints);
-    goal = new TrapezoidProfile.State(getPosition(), 0);
-    setpoint = goal;
   }
 
   @Override
@@ -47,8 +36,7 @@ public class PositionalPID extends SubsystemBase {
     positionalpid.updateInputs(inputs);
     Logger.processInputs(name, inputs);
 
-    setpoint = profile.calculate(0.02, setpoint, goal);
-    positionalpid.setPosition(setpoint.position, setpoint.velocity);
+    positionalpid.setPosition(50);
 
     LoggedTunableNumber.ifChanged(
         hashCode(),
@@ -74,16 +62,16 @@ public class PositionalPID extends SubsystemBase {
   }
 
   public void setPosition(double position) {
-    goal = new TrapezoidProfile.State(MathUtil.clamp(position, 0, 100), 0);
+    positionalpid.setPosition(position);
   }
 
-  public void incrementPosition(double delta) {
-    goal.position += delta;
-  }
+  // public void incrementPosition(double delta) {
+  //   goal.position += delta;
+  // }
 
-  public void decrementPosition(double delta) {
-    goal.position -= delta;
-  }
+  // public void decrementPosition(double delta) {
+  //   goal.position -= delta;
+  // }
 
   public double getVelocity() {
     return inputs.velocity;
@@ -97,7 +85,7 @@ public class PositionalPID extends SubsystemBase {
     return inputs.desiredVelocity;
   }
 
-  public boolean isFInished() {
-    return Math.abs(inputs.motorPositions[0] - goal.position) < 5;
-  }
+  // public boolean isFInished() {
+  //   return Math.abs(inputs.motorPositions[0] - goal.position) < 5;
+  // }
 }

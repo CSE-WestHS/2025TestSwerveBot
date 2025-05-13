@@ -49,7 +49,7 @@ public class PositionJointConstants {
 
   public static final PositionJointHardwareConfig EXAMPLE_CONFIG =
       new PositionJointHardwareConfig(
-          new int[] {42},
+          new int[] {92},
           new boolean[] {true},
           85.33333 * 2 * Math.PI,
           40,

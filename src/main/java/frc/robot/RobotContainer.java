@@ -12,7 +12,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
-import frc.robot.commands.position_joint.PositionJointPositionCommand;
 import frc.robot.subsystems.PositionalPID.PositionalPID;
 import frc.robot.subsystems.PositionalPID.PositionalPIDConstants;
 import frc.robot.subsystems.PositionalPID.PositionalPIDIONeo;
@@ -27,11 +26,6 @@ import frc.robot.subsystems.drive.spark.ModuleIOSpark;
 import frc.robot.subsystems.drive.spark.ModuleIOSparkSim;
 import frc.robot.subsystems.drive.spark.SparkMaxModuleConstants;
 import frc.robot.subsystems.drive.spark.SparkOdometryThread;
-import frc.robot.subsystems.vision.Vision;
-import frc.robot.subsystems.vision.VisionConstants;
-import frc.robot.subsystems.vision.VisionIO;
-import frc.robot.subsystems.vision.VisionIOPhotonVision;
-import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.pathplanner.AdvancedPPHolonomicDriveController;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
@@ -50,7 +44,7 @@ public class RobotContainer {
   private final Drive drive;
 
   @SuppressWarnings("unused")
-  private final Vision vision;
+  //   private final Vision vision;
 
   //   private final Flywheel flywheel;
   private final PositionalPID ppd;
@@ -77,11 +71,11 @@ public class RobotContainer {
                 new ModuleIOSpark(SparkMaxModuleConstants.rearLeft),
                 new ModuleIOSpark(SparkMaxModuleConstants.rearRight),
                 SparkOdometryThread.getInstance());
-        vision =
-            new Vision(
-                drive::addVisionMeasurement,
-                new VisionIOPhotonVision(
-                    VisionConstants.camera0Name, VisionConstants.robotToCamera0));
+        // vision =
+        // new Vision(
+        // drive::addVisionMeasurement,
+        // new VisionIOPhotonVision(
+        // VisionConstants.camera0Name, VisionConstants.robotToCamera0));
         // flywheel =
         //     new Flywheel(
         //         new FlywheelIONeo("flywheel", FlywheelConstants.EXAMPLE_CONFIG),
@@ -110,17 +104,17 @@ public class RobotContainer {
                 new ModuleIOSparkSim(driveSimulation.getModules()[3]),
                 null);
 
-        vision =
-            new Vision(
-                drive::addVisionMeasurement,
-                new VisionIOPhotonVisionSim(
-                    VisionConstants.camera0Name,
-                    VisionConstants.robotToCamera0,
-                    driveSimulation::getSimulatedDriveTrainPose),
-                new VisionIOPhotonVisionSim(
-                    VisionConstants.camera1Name,
-                    VisionConstants.robotToCamera1,
-                    driveSimulation::getSimulatedDriveTrainPose));
+        // vision =
+        //     new Vision(
+        //         drive::addVisionMeasurement,
+        //         new VisionIOPhotonVisionSim(
+        //             VisionConstants.camera0Name,
+        //             VisionConstants.robotToCamera0,
+        //             driveSimulation::getSimulatedDriveTrainPose),
+        //         new VisionIOPhotonVisionSim(
+        //             VisionConstants.camera1Name,
+        //             VisionConstants.robotToCamera1,
+        //             driveSimulation::getSimulatedDriveTrainPose));
         // flywheel =
         //     new Flywheel(
         //         new FlywheelIOSim("flywheelSIM", FlywheelConstants.EXAMPLE_CONFIG),
@@ -141,7 +135,7 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 null);
-        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
+        // vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
 
         // flywheel =
         //     new Flywheel(
@@ -229,7 +223,7 @@ public class RobotContainer {
 
     // Reset gyro to 0° when B button is pressed
     driverController.b().onTrue(Commands.runOnce(resetGyro, drive).ignoringDisable(true));
-    driverController.povDown().onTrue(new PositionJointPositionCommand(ppd, 50));
+    driverController.povDown().whileTrue(Commands.run(() -> ppd.setPosition(50)));
     AdvancedPPHolonomicDriveController.setYSetpointIncrement(xOverride::get);
   }
 

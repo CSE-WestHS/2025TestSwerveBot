@@ -24,7 +24,7 @@ public interface PositionalPIDIO {
 
   public default void setVelocity(double velocity) {}
 
-  public default void setPosition(double position, double velocity) {}
+  public default void setPosition(double position) {}
 
   public default void setVoltage(double voltage) {}
 

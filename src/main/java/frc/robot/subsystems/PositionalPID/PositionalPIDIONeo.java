@@ -11,12 +11,13 @@ import com.revrobotics.spark.config.ClosedLoopConfig;
 import com.revrobotics.spark.config.EncoderConfig;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import edu.wpi.first.math.controller.ElevatorFeedforward;
+import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import frc.robot.subsystems.PositionalPID.PositionalPIDConstants.PositionalPIDGains;
 import frc.robot.subsystems.PositionalPID.PositionalPIDConstants.PositionalPIDHardwareConfig;
-import frc.robot.util.PositionJointFeedforward;
-import frc.robot.util.TunableElevatorFeedforward;
 
 public class PositionalPIDIONeo implements PositionalPIDIO {
   private final String name;
@@ -37,7 +38,7 @@ public class PositionalPIDIONeo implements PositionalPIDIO {
 
   private final Alert[] motorAlerts;
 
-  private PositionJointFeedforward FF = new TunableElevatorFeedforward();
+  // private PositionJointFeedforward FF = new TunableElevatorFeedforward();
 
   private double desiredVelocity = 0.0;
 
@@ -47,6 +48,18 @@ public class PositionalPIDIONeo implements PositionalPIDIO {
 
   private double positionSetpoint;
   // private DoubleSupplier externalFeedForward;
+
+  private TrapezoidProfile.Constraints constraints;
+  // private ProfiledPIDController pid;
+  private TrapezoidProfile profile;
+  private TrapezoidProfile.State setpoint = new TrapezoidProfile.State();
+  private TrapezoidProfile.State goal = new TrapezoidProfile.State();
+  // private final ElevatorFeedforward eff =
+  //     new ElevatorFeedforward(
+  //         PositionalPIDConstants.EXAMPLE_GAINS.kS(),
+  //         0,
+  //         PositionalPIDConstants.EXAMPLE_GAINS.kV(),
+  //         PositionalPIDConstants.EXAMPLE_GAINS.kA());
 
   private PositionalPIDGains gains;
 
@@ -95,6 +108,21 @@ public class PositionalPIDIONeo implements PositionalPIDIO {
               AlertType.kError);
     }
     motors[0].getEncoder().setPosition(0);
+    constraints = new TrapezoidProfile.Constraints(10, 1);
+    profile = new TrapezoidProfile(constraints);
+    goal = new TrapezoidProfile.State(motors[0].getEncoder().getPosition(), 0);
+    // pid =
+    //     new ProfiledPIDController(
+    //         PositionalPIDConstants.EXAMPLE_GAINS.kP(),
+    //         PositionalPIDConstants.EXAMPLE_GAINS.kI(),
+    //         PositionalPIDConstants.EXAMPLE_GAINS.kD(),
+    //         constraints,
+    //         0.02);
+
+    // // setpoint = goal;
+    // pid.enableContinuousInput(0, 2 * Math.PI);
+    // pid.setTolerance(5);
+    // pid.setGoal(50);
   }
 
   @Override
@@ -140,19 +168,24 @@ public class PositionalPIDIONeo implements PositionalPIDIO {
   }
 
   @Override
-  public void setPosition(double position, double velocity) {
-    positionSetpoint = position;
-    double feedforward = currentPosition;
+  public void setPosition(double position) {
+    // pid.setGoal(position);
 
-    motors[0]
-        .getClosedLoopController()
-        .setReference(
-            positionSetpoint,
-            ControlType.kPosition,
-            ClosedLoopSlot.kSlot0,
-            FF.calculate(feedforward, velocity, velocitySetpoint, 0.02));
-    velocitySetpoint = velocity;
+    // positionSetpoint = position;
+    // double feedforward = currentPosition;
+
+    // velocitySetpoint = velocity;
     // System.out.println("NEORAN2");
+    double voltage = pid.calculate(motors[0].getEncoder().getPosition()) + 0.1;
+    System.out.println("setpoint velocity" + pid.getSetpoint().velocity);
+    voltage *= 12;
+    System.out.println("output voltage" + voltage);
+    setVoltage(voltage);
+    // System.out.println(eff.getKv());
+
+    // System.out.println(pid.getSetpoint().position);
+    // System.out.println(pid.getSetpoint().velocity);
+    // pid.setGoal(100);
   }
 
   @Override
